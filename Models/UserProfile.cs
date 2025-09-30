@@ -4,7 +4,7 @@ namespace FitnessTracker.Models
 {
     public class UserProfile
     {
-        [Key]
+        //[Key]
         public int Id { get; set; }
 
         [Required]

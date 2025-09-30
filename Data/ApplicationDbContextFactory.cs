@@ -12,7 +12,7 @@ namespace FitnessTracker.Data
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
             // 👇 Hardcode or read environment variable for migration-time
-            optionsBuilder.UseSqlServer("Server=SriRam;Database=SpaceTourWebdb;Trusted_Connection=True;TrustServerCertificate=True;");
+            optionsBuilder.UseSqlServer("Server=SriRam;Database=FitnessTrackerDb;Trusted_Connection=True;TrustServerCertificate=True;");
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }

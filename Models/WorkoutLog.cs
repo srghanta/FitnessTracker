@@ -5,20 +5,19 @@ namespace FitnessTracker.Models
 {
     public class WorkoutLog
     {
-        [Key]
+        
         public int Id { get; set; }
 
         // Foreign key to workout
         public int WorkoutId { get; set; }
 
-        [ForeignKey("WorkoutId")]
+        //[ForeignKey("WorkoutId")]
         public string? Workout { get; set; }
 
         // Foreign key to user
         public int UserProfileId { get; set; }
 
-        [ForeignKey("UserProfileId")]
-        public UserProfile? UserProfile { get; set; }
+        //public UserProfile? UserProfile { get; set; }
 
         public DateTime Date { get; set; }
         public int ActualDurationMinutes { get; set; }
