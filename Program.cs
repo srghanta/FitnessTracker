@@ -1,13 +1,12 @@
 ﻿using FitnessTracker.Data;
 using FitnessTracker.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using FitnessTracker.Data; // adjust namespace
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Add DbContext with correct connection string
+// ✅ Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
            .EnableSensitiveDataLogging()
@@ -17,12 +16,25 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+ 
+builder.Services.AddAutoMapper(typeof(Program));
 
-builder.Services.AddControllers();
+
+// ✅ Add Controllers + Fix for JSON cycle issue
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+
+
 
 if (app.Environment.IsDevelopment())
 {
