@@ -24,18 +24,31 @@ namespace FitnessTracker.Controllers
         [HttpPost]
         public async Task<ActionResult<WorkoutReadDto>> CreateWorkout([FromBody] WorkoutCreateDto workoutDto)
         {
+            // Try to find existing user
             var user = await _context.UserProfiles.FindAsync(workoutDto.UserProfileId);
-            if (user == null)
-                return BadRequest("User does not exist.");
 
+            // If user does not exist, create a new one automatically
+            if (user == null)
+            {
+                user = new UserProfile
+                {
+                    UserName = $"User{workoutDto.UserProfileId}" // Do NOT set Id manually
+                };
+                _context.UserProfiles.Add(user);
+                await _context.SaveChangesAsync(); // EF will generate the Id
+            }
+
+            // Map DTO to Workout entity
             var workout = _mapper.Map<Workout>(workoutDto);
 
+            // Attach the existing (or newly created) user
+            workout.UserProfile = user;
+
+            // Save workout
             _context.Workouts.Add(workout);
             await _context.SaveChangesAsync();
 
-            // ✅ Load UserProfile so AutoMapper can map UserName
-            await _context.Entry(workout).Reference(w => w.UserProfile).LoadAsync();
-
+            // Map back to DTO
             var resultDto = _mapper.Map<WorkoutReadDto>(workout);
 
             return CreatedAtAction(nameof(GetWorkout), new { id = workout.Id }, resultDto);
@@ -46,7 +59,7 @@ namespace FitnessTracker.Controllers
         public async Task<ActionResult<IEnumerable<WorkoutReadDto>>> GetWorkouts()
         {
             var workouts = await _context.Workouts
-                .Include(w => w.UserProfile)
+                .Include(w => w.UserProfile) // Include navigation property
                 .ToListAsync();
 
             return Ok(_mapper.Map<IEnumerable<WorkoutReadDto>>(workouts));

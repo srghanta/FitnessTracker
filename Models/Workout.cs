@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FitnessTracker.Models
 {
@@ -15,11 +14,12 @@ namespace FitnessTracker.Models
 
         public DateTime Date { get; set; } = DateTime.UtcNow;
 
-        // Foreign key to user
+        // Foreign key
+        [Required]
         public int UserProfileId { get; set; }
-        
-        //[ForeignKey("UserProfileId")]
-        public string? UserProfile { get; set; }
+
+        // Navigation property
+        public UserProfile UserProfile { get; set; } = null!;
 
         // Navigation property to logs
         public ICollection<WorkoutLog> Logs { get; set; } = new List<WorkoutLog>();
