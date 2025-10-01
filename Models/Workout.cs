@@ -17,9 +17,9 @@ namespace FitnessTracker.Models
 
         // Foreign key to user
         public int UserProfileId { get; set; }
-
+        
         //[ForeignKey("UserProfileId")]
-        public UserProfile? UserProfile { get; set; }
+        public string? UserProfile { get; set; }
 
         // Navigation property to logs
         public ICollection<WorkoutLog> Logs { get; set; } = new List<WorkoutLog>();

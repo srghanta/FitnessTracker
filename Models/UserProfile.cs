@@ -17,6 +17,6 @@ namespace FitnessTracker.Models
         public double Height { get; set; }
 
         // Navigation property
-        public List<Workout>? Workouts { get; set; }
+        //public List<Workout>? Workouts { get; set; }
     }
 }

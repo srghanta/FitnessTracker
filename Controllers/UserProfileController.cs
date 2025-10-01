@@ -20,15 +20,14 @@ namespace FitnessTracker.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserProfile>>> GetUsers()
         {
-            return await _context.UserProfiles.Include(u => u.Workouts).ToListAsync();
+            return await _context.UserProfiles.ToListAsync();
         }
 
         // GET: api/UserProfile/5
         [HttpGet("{id}")]
         public async Task<ActionResult<UserProfile>> GetUser(int id)
         {
-            var user = await _context.UserProfiles.Include(u => u.Workouts)
-                                                  .FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null) return NotFound();
             return user;
         }
