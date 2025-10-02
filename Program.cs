@@ -11,18 +11,36 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // -------------------- DbContext --------------------
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+    throw new Exception("DefaultConnection is missing in appsettings.json");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseSqlServer(connectionString)
            .EnableSensitiveDataLogging()
            .LogTo(Console.WriteLine, LogLevel.Information));
 
 // -------------------- Identity --------------------
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true; // Must match your policy
+    options.Password.RequiredLength = 6;
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 // -------------------- JWT Authentication --------------------
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+    throw new Exception("JWT configuration is missing in appsettings.json.");
+
+var key = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -37,8 +55,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
@@ -59,51 +77,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
-// -------------------- Seed Default Data --------------------
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-    // Seed default user
-    if (!context.UserProfiles.Any())
-    {
-        context.UserProfiles.Add(new UserProfile { UserName = "DefaultUser" });
-        context.SaveChanges();
-        Console.WriteLine("Default user created with ID 1.");
-    }
-
-    var defaultUser = context.UserProfiles.First();
-
-    // Seed default workout
-    if (!context.Workouts.Any())
-    {
-        context.Workouts.Add(new Workout
-        {
-            Name = "Seed Workout",
-            DurationMinutes = 30,
-            Date = DateTime.UtcNow,
-            UserProfileId = defaultUser.Id
-        });
-        context.SaveChanges();
-        Console.WriteLine("Default workout created.");
-    }
-
-    var defaultWorkout = context.Workouts.First();
-
-    // Seed default workout log
-    if (!context.WorkoutLogs.Any())
-    {
-        context.WorkoutLogs.Add(new WorkoutLog
-        {
-            WorkoutId = defaultWorkout.Id,
-            Notes = "First workout log",
-            Date = DateTime.UtcNow
-        });
-        context.SaveChanges();
-        Console.WriteLine("Default workout log created.");
-    }
-}
 
 // -------------------- Middleware --------------------
 if (app.Environment.IsDevelopment())

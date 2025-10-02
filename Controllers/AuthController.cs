@@ -33,7 +33,8 @@ namespace FitnessTracker.Controllers
             var user = new User
             {
                 UserName = registerDto.UserName,
-                Email = registerDto.Email
+                Email = registerDto.Email,
+                FullName = registerDto.FullName   // <-- Assign FullName
             };
 
             var result = await _userManager.CreateAsync(user, registerDto.Password);
@@ -48,6 +49,8 @@ namespace FitnessTracker.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
+           
+
             var user = await _userManager.FindByNameAsync(loginDto.UserName);
             if (user == null)
                 return Unauthorized("Invalid username or password.");
@@ -71,11 +74,11 @@ namespace FitnessTracker.Controllers
             };
 
             var authSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+    Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JWT:ValidIssuer"],
-                audience: _configuration["JWT:ValidAudience"],
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
                 expires: DateTime.UtcNow.AddHours(2),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)

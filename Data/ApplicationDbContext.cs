@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using FitnessTracker.Models;
+﻿using FitnessTracker.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace FitnessTracker.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<User>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
@@ -13,9 +14,5 @@ namespace FitnessTracker.Data
         public DbSet<WorkoutLog> WorkoutLogs { get; set; }
         public DbSet<NutritionLog> NutritionLogs { get; set; }
         public DbSet<Goal> Goals { get; set; }
-
-        
-
     }
 }
-
