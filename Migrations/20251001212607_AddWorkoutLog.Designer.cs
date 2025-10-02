@@ -4,6 +4,7 @@ using FitnessTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FitnessTracker.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251001212607_AddWorkoutLog")]
+    partial class AddWorkoutLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,11 +173,16 @@ namespace FitnessTracker.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("ActualDurationMinutes")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Notes")
-                        .IsRequired()
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Workout")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("WorkoutId")
@@ -200,13 +208,11 @@ namespace FitnessTracker.Migrations
 
             modelBuilder.Entity("FitnessTracker.Models.WorkoutLog", b =>
                 {
-                    b.HasOne("FitnessTracker.Models.Workout", "Workout")
+                    b.HasOne("FitnessTracker.Models.Workout", null)
                         .WithMany("Logs")
                         .HasForeignKey("WorkoutId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Workout");
                 });
 
             modelBuilder.Entity("FitnessTracker.Models.Workout", b =>

@@ -2,11 +2,14 @@
 using FitnessTracker.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace FitnessTracker.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // Requires authentication for all endpoints in this controller
     public class UserProfileController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

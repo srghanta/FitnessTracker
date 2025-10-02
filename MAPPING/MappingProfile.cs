@@ -14,3 +14,16 @@ namespace FitnessTracker.Mapping
         }
     }
 }
+public class MappingProfile : Profile
+{
+    public MappingProfile()
+    {
+        // Workout mappings
+        CreateMap<Workout, WorkoutReadDto>();
+        CreateMap<WorkoutCreateDto, Workout>();
+
+        // WorkoutLog mappings
+        CreateMap<WorkoutLog, WorkoutLogReadDto>();
+        CreateMap<WorkoutLogCreateDto, WorkoutLog>();
+    }
+}
