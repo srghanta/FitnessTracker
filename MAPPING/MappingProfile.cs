@@ -8,22 +8,20 @@ namespace FitnessTracker.Mapping
     {
         public MappingProfile()
         {
+            // Workout
             CreateMap<WorkoutCreateDto, Workout>();
-            CreateMap<Workout, WorkoutReadDto>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserProfile.UserName));
-        }
-    }
-}
-public class MappingProfile : Profile
-{
-    public MappingProfile()
-    {
-        // Workout mappings
-        CreateMap<Workout, WorkoutReadDto>();
-        CreateMap<WorkoutCreateDto, Workout>();
+            CreateMap<Workout, WorkoutReadDto>();
 
-        // WorkoutLog mappings
-        CreateMap<WorkoutLog, WorkoutLogReadDto>();
-        CreateMap<WorkoutLogCreateDto, WorkoutLog>();
+            // WorkoutLog
+            CreateMap<WorkoutLogCreateDto, WorkoutLog>();
+            CreateMap<WorkoutLog, WorkoutLogReadDto>()
+                .ForMember(dest => dest.WorkoutName, opt => opt.MapFrom(src => src.Workout.Name));
+
+            // NutritionLog
+            CreateMap<NutritionLogDto, NutritionLog>().ReverseMap();
+
+            // Goal
+            CreateMap<GoalDto, Goal>().ReverseMap();
+        }
     }
 }

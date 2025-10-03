@@ -4,6 +4,7 @@
     {
         public int Id { get; set; }
         public string UserId { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty; // optional for DTO
         public string GoalType { get; set; } = string.Empty; // Weight/Calories/Workout
         public decimal TargetValue { get; set; }
         public decimal CurrentValue { get; set; }

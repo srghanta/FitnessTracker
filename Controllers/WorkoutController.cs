@@ -1,84 +1,94 @@
-﻿using AutoMapper;
-using FitnessTracker.Data;
-using FitnessTracker.DTOs;
+﻿using FitnessTracker.Data;
 using FitnessTracker.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FitnessTracker.Controllers
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class WorkoutsController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize] // Requires authentication for all endpoints in this controller
-    public class WorkoutsController : ControllerBase
+    private readonly ApplicationDbContext _context;
+    private readonly UserManager<User> _userManager;
+
+    public WorkoutsController(ApplicationDbContext context, UserManager<User> userManager)
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
+        _context = context;
+        _userManager = userManager;
+    }
 
-        public WorkoutsController(ApplicationDbContext context, IMapper mapper)
-        {
-            _context = context;
-            _mapper = mapper;
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetWorkouts()
+    {
+        var userName = User.Identity?.Name;
+        var user = await _userManager.FindByNameAsync(userName);
+        if (user == null) return BadRequest("User not found");
 
-        // POST: api/workouts
-        [HttpPost]
-        public async Task<ActionResult<WorkoutReadDto>> CreateWorkout([FromBody] WorkoutCreateDto workoutDto)
-        {
-            // Ensure there is at least one user
-            var user = await _context.UserProfiles.FirstOrDefaultAsync();
-            if (user == null)
-                return BadRequest("No users exist in the system.");
+        var workouts = await _context.Workouts
+            .Where(w => w.UserId == user.Id)
+            .ToListAsync();
 
-            var workout = _mapper.Map<Workout>(workoutDto);
-            workout.UserProfileId = user.Id;
-            workout.UserProfile = user;
+        // Populate UserName
+        workouts.ForEach(w => w.UserName = user.UserName);
 
-            _context.Workouts.Add(workout);
-            await _context.SaveChangesAsync();
+        return Ok(workouts);
+    }
 
-            var resultDto = _mapper.Map<WorkoutReadDto>(workout);
-            return CreatedAtAction(nameof(GetWorkout), new { id = workout.Id }, resultDto);
-        }
+    [HttpPost]
+    public async Task<IActionResult> CreateWorkout([FromBody] Workout workout)
+    {
+        var userName = User.Identity?.Name;
+        var user = await _userManager.FindByNameAsync(userName);
+        if (user == null) return BadRequest("User not found");
 
-        // GET: api/workouts
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<WorkoutReadDto>>> GetWorkouts()
-        {
-            var workouts = await _context.Workouts
-                .Include(w => w.UserProfile)
-                .ToListAsync();
+        workout.UserId = user.Id;
+        workout.UserName = user.UserName;
+        workout.Date = DateTime.UtcNow;
 
-            return Ok(_mapper.Map<IEnumerable<WorkoutReadDto>>(workouts));
-        }
+        _context.Workouts.Add(workout);
+        await _context.SaveChangesAsync();
 
-        // GET: api/workouts/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<WorkoutReadDto>> GetWorkout(int id)
-        {
-            var workout = await _context.Workouts
-                .Include(w => w.UserProfile)
-                .FirstOrDefaultAsync(w => w.Id == id);
+        return Ok(workout);
+    }
 
-            if (workout == null)
-                return NotFound();
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateWorkout(int id, [FromBody] Workout workout)
+    {
+        var userName = User.Identity?.Name;
+        var user = await _userManager.FindByNameAsync(userName);
+        if (user == null) return BadRequest("User not found");
 
-            return Ok(_mapper.Map<WorkoutReadDto>(workout));
-        }
+        var existing = await _context.Workouts
+            .Where(w => w.Id == id && w.UserId == user.Id)
+            .FirstOrDefaultAsync();
 
-        // DELETE: api/workouts/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteWorkout(int id)
-        {
-            var workout = await _context.Workouts.FindAsync(id);
-            if (workout == null)
-                return NotFound();
+        if (existing == null) return NotFound();
 
-            _context.Workouts.Remove(workout);
-            await _context.SaveChangesAsync();
+        existing.Name = workout.Name;
+        existing.DurationMinutes = workout.DurationMinutes;
+        await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
+        return Ok(existing);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteWorkout(int id)
+    {
+        var userName = User.Identity?.Name;
+        var user = await _userManager.FindByNameAsync(userName);
+        if (user == null) return BadRequest("User not found");
+
+        var workout = await _context.Workouts
+            .Where(w => w.Id == id && w.UserId == user.Id)
+            .FirstOrDefaultAsync();
+
+        if (workout == null) return NotFound();
+
+        _context.Workouts.Remove(workout);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }

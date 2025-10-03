@@ -4,15 +4,13 @@ namespace FitnessTracker.DTOs
 {
     public class WorkoutCreateDto
     {
+
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
         public int DurationMinutes { get; set; }
 
-        public DateTime Date { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public int UserProfileId { get; set; }
+        
     }
 }

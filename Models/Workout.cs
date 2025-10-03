@@ -11,17 +11,15 @@ namespace FitnessTracker.Models
         public string Name { get; set; } = string.Empty;
 
         public int DurationMinutes { get; set; }
-
         public DateTime Date { get; set; } = DateTime.UtcNow;
 
-        // Foreign key
+        // Identity UserId
         [Required]
-        public int UserProfileId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
-        // Navigation property
-        public UserProfile UserProfile { get; set; } = null!;
+        // Optional: store UserName for mapping
+        public string UserName { get; set; } = string.Empty;
 
-        // Navigation property to logs
         public ICollection<WorkoutLog> Logs { get; set; } = new List<WorkoutLog>();
     }
 }

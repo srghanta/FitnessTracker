@@ -2,6 +2,8 @@
 {
     public class WorkoutLogReadDto
     {
+       
+
         public int Id { get; set; }
         public string Notes { get; set; } = string.Empty;
         public DateTime Date { get; set; }
