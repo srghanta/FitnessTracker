@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FitnessTracker.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace FitnessTracker.Models
 {
@@ -12,6 +13,8 @@ namespace FitnessTracker.Models
 
         public int DurationMinutes { get; set; }
         public DateTime Date { get; set; } = DateTime.UtcNow;
+
+        public User User { get; set; }      // navigation
 
         // Identity UserId
         [Required]
