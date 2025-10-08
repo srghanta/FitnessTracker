@@ -3,11 +3,12 @@ using FitnessTracker.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,12 +70,13 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
 // -------------------- Swagger --------------------
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "FitnessTracker API", Version = "v1" });
@@ -101,6 +103,19 @@ builder.Services.AddSwaggerGen(c =>
     {
         { jwtSecurityScheme, Array.Empty<string>() }
     });
+
+    // Optional: You can manually map the RegisterDto schema here
+    c.MapType<RegisterDto>(() => new OpenApiSchema
+    {
+        Type = "object",
+        Properties =
+        {
+            { "userName", new OpenApiSchema { Type = "string" } },
+            { "email", new OpenApiSchema { Type = "string" } },
+            { "password", new OpenApiSchema { Type = "string" } },
+            { "fullName", new OpenApiSchema { Type = "string" } }
+        }
+    });
 });
 
 var app = builder.Build();
@@ -115,6 +130,8 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication(); // Must come before UseAuthorization
 app.UseAuthorization();
 
-app.MapControllers();
+// CORS setup if needed
+app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
+app.MapControllers();
 app.Run();

@@ -3,7 +3,6 @@ using FitnessTracker.Data;
 using FitnessTracker.DTOs;
 using FitnessTracker.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,38 +15,35 @@ namespace FitnessTracker.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        private readonly UserManager<User> _userManager;
 
-        public WorkoutLogController(ApplicationDbContext context, IMapper mapper, UserManager<User> userManager)
+        public WorkoutLogController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
-            _userManager = userManager;
         }
 
-        // POST: api/workoutlog
+        // POST: api/workoutlog/{workoutId}
         [HttpPost("{workoutId}")]
         public async Task<ActionResult<WorkoutLogReadDto>> CreateWorkoutLog(int workoutId, [FromBody] WorkoutLogCreateDto logDto)
         {
-            var userName = User.Identity?.Name;
-            var user = await _userManager.FindByNameAsync(userName);
-            if (user == null) return BadRequest("User not found");
-
-            // Ensure the workout belongs to the current user
-            var workout = await _context.Workouts
-                .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == user.Id);
+            // Find the workout
+            var workout = await _context.Workout
+                .Include(w => w.WorkoutLogs)
+                .FirstOrDefaultAsync(w => w.Id == workoutId);
 
             if (workout == null)
-                return BadRequest("Workout not found for this user.");
+                return BadRequest("Workout not found");
 
+            // Map DTO to entity
             var log = _mapper.Map<WorkoutLog>(logDto);
-            log.WorkoutId = workout.Id;
+            log.WorkoutId = workout.Id;  // Ensure the correct WorkoutId is set
 
-            _context.WorkoutLogs.Add(log);
+            _context.WorkoutLog.Add(log);
             await _context.SaveChangesAsync();
 
+            // Map entity to DTO for response
             var resultDto = _mapper.Map<WorkoutLogReadDto>(log);
-            resultDto.WorkoutName = workout.Name; // ensure WorkoutName is populated
+            resultDto.WorkoutName = workout.Name;  // Optionally include WorkoutName in response DTO
 
             return CreatedAtAction(nameof(GetWorkoutLog), new { id = log.Id }, resultDto);
         }
@@ -56,54 +52,42 @@ namespace FitnessTracker.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<WorkoutLogReadDto>>> GetWorkoutLogs()
         {
-            var userName = User.Identity?.Name;
-            var user = await _userManager.FindByNameAsync(userName);
-            if (user == null) return BadRequest("User not found");
-
-            var logs = await _context.WorkoutLogs
-                .Include(l => l.Workout)
-                .Where(l => l.Workout.UserId == user.Id)
+            var logs = await _context.WorkoutLog
+                .Include(l => l.Workout)  // Include Workout info for each log
                 .ToListAsync();
 
             var result = _mapper.Map<IEnumerable<WorkoutLogReadDto>>(logs);
             return Ok(result);
         }
 
-        // GET: api/workoutlog/5
+        // GET: api/workoutlog/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<WorkoutLogReadDto>> GetWorkoutLog(int id)
         {
-            var userName = User.Identity?.Name;
-            var user = await _userManager.FindByNameAsync(userName);
-            if (user == null) return BadRequest("User not found");
-
-            var log = await _context.WorkoutLogs
+            var log = await _context.WorkoutLog
                 .Include(l => l.Workout)
-                .FirstOrDefaultAsync(l => l.Id == id && l.Workout.UserId == user.Id);
+                .FirstOrDefaultAsync(l => l.Id == id);
 
             if (log == null)
                 return NotFound();
 
             var result = _mapper.Map<WorkoutLogReadDto>(log);
+            result.WorkoutName = log.Workout.Name;  // Include WorkoutName for display
+
             return Ok(result);
         }
 
-        // DELETE: api/workoutlog/5
+        // DELETE: api/workoutlog/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteWorkoutLog(int id)
         {
-            var userName = User.Identity?.Name;
-            var user = await _userManager.FindByNameAsync(userName);
-            if (user == null) return BadRequest("User not found");
-
-            var log = await _context.WorkoutLogs
-                .Include(l => l.Workout)
-                .FirstOrDefaultAsync(l => l.Id == id && l.Workout.UserId == user.Id);
+            var log = await _context.WorkoutLog
+                .FirstOrDefaultAsync(l => l.Id == id);
 
             if (log == null)
                 return NotFound();
 
-            _context.WorkoutLogs.Remove(log);
+            _context.WorkoutLog.Remove(log);
             await _context.SaveChangesAsync();
 
             return NoContent();

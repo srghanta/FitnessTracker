@@ -6,6 +6,12 @@ namespace FitnessTracker.Models
     {
         public int Id { get; set; }
 
+        // Foreign key to IdentityUser
+        public string UserId { get; set; } // Link to IdentityUser
+
+        // Optional: You can add a navigation property to the IdentityUser
+        public User User { get; set; }
+
         [Required]
         public string UserName { get; set; } = string.Empty;
 

@@ -1,28 +1,18 @@
 ﻿using FitnessTracker.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace FitnessTracker.Models
+public class Workout
 {
-    public class Workout
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        [Required]
-        [MaxLength(500)]
-        public string Name { get; set; } = string.Empty;
+    [Required]
+    public string Name { get; set; } = string.Empty;
+    public int DurationMinutes { get; set; }
 
-        public int DurationMinutes { get; set; }
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+    // Link to UserProfile
+    [Required]
+    public int UserProfileId { get; set; }
+    public UserProfile UserProfile { get; set; }
 
-        public User User { get; set; }      // navigation
-
-        // Identity UserId
-        [Required]
-        public string UserId { get; set; } = string.Empty;
-
-        // Optional: store UserName for mapping
-        public string UserName { get; set; } = string.Empty;
-
-        public ICollection<WorkoutLog> Logs { get; set; } = new List<WorkoutLog>();
-    }
+    public ICollection<WorkoutLog> WorkoutLogs { get; set; }
 }

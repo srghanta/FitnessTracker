@@ -175,6 +175,10 @@ namespace FitnessTracker.Migrations
                     b.Property<double>("Height")
                         .HasColumnType("float");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -183,6 +187,9 @@ namespace FitnessTracker.Migrations
                         .HasColumnType("float");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("UserProfiles");
                 });
@@ -210,38 +217,6 @@ namespace FitnessTracker.Migrations
                     b.ToTable("WeightLogs");
                 });
 
-            modelBuilder.Entity("FitnessTracker.Models.Workout", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Workouts");
-                });
-
             modelBuilder.Entity("FitnessTracker.Models.WorkoutLog", b =>
                 {
                     b.Property<int>("Id")
@@ -264,7 +239,7 @@ namespace FitnessTracker.Migrations
 
                     b.HasIndex("WorkoutId");
 
-                    b.ToTable("WorkoutLogs");
+                    b.ToTable("WorkoutLog");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -400,10 +375,46 @@ namespace FitnessTracker.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Workout", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserProfileId");
+
+                    b.ToTable("Workout");
+                });
+
+            modelBuilder.Entity("FitnessTracker.Models.UserProfile", b =>
+                {
+                    b.HasOne("FitnessTracker.Models.User", "User")
+                        .WithOne()
+                        .HasForeignKey("FitnessTracker.Models.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FitnessTracker.Models.WorkoutLog", b =>
                 {
-                    b.HasOne("FitnessTracker.Models.Workout", "Workout")
-                        .WithMany("Logs")
+                    b.HasOne("Workout", "Workout")
+                        .WithMany("WorkoutLogs")
                         .HasForeignKey("WorkoutId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -462,9 +473,20 @@ namespace FitnessTracker.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FitnessTracker.Models.Workout", b =>
+            modelBuilder.Entity("Workout", b =>
                 {
-                    b.Navigation("Logs");
+                    b.HasOne("FitnessTracker.Models.UserProfile", "UserProfile")
+                        .WithMany()
+                        .HasForeignKey("UserProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("Workout", b =>
+                {
+                    b.Navigation("WorkoutLogs");
                 });
 #pragma warning restore 612, 618
         }

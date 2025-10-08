@@ -6,16 +6,19 @@ namespace FitnessTracker.Models
     {
         public int Id { get; set; }
 
-        [Required]
+        
         public string Notes { get; set; } = string.Empty;
 
         public DateTime Date { get; set; } = DateTime.UtcNow;
 
         // Foreign key to Workout
-        [Required]
+        
         public int WorkoutId { get; set; }
 
         // Navigation property
-        public Workout Workout { get; set; } = null!;
+        public Workout Workout { get; set; } 
+
+     
+
     }
 }

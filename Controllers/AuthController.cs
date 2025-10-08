@@ -1,4 +1,5 @@
-﻿using FitnessTracker.Models;
+﻿using FitnessTracker.DTOs;
+using FitnessTracker.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -14,21 +15,37 @@ namespace FitnessTracker.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _config;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(UserManager<User> userManager, IConfiguration config)
+        public AuthController(UserManager<User> userManager, IConfiguration config, ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _config = config;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var user = new User { UserName = model.Username, Email = model.Email };
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Map RegisterDto to User model
+            var user = new User
+            {
+                UserName = model.UserName,  // Corrected the property name to match the DTO
+                Email = model.Email,
+                FullName = model.FullName // Ensure FullName is correctly passed
+            };
+
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            {
+                // Log registration failure details
+                _logger.LogError("Registration failed for user: {UserName}", model.UserName);
+                return BadRequest("Registration failed. Please check your details.");
+            }
 
             return Ok("User registered successfully");
         }
@@ -36,7 +53,7 @@ namespace FitnessTracker.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            var user = await _userManager.FindByNameAsync(model.Username);
+            var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
                 return Unauthorized();
 
@@ -59,11 +76,9 @@ namespace FitnessTracker.Controllers
             return Ok(new
             {
                 token = new JwtSecurityTokenHandler().WriteToken(token),
-                expiration = token.ValidTo
+                expiration = token.ValidTo,
+                username = user.UserName  // Optionally include user info
             });
         }
     }
-
-    public record RegisterDto(string Username, string Email, string Password);
-    public record LoginDto(string Username, string Password);
 }
