@@ -14,4 +14,9 @@ public class RegisterDto
 
     [Required]
     public string FullName { get; set; } = string.Empty;
+
+    // Optional profile fields
+    public int Age { get; set; } = 0;
+    public double Weight { get; set; } = 0;
+    public double Height { get; set; } = 0;
 }

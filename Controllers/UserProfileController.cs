@@ -37,12 +37,24 @@ namespace FitnessTracker.Controllers
 
         // POST: api/UserProfile
         [HttpPost]
-        public async Task<ActionResult<UserProfile>> CreateUser(UserProfile user)
+
+        public async Task<ActionResult<UserProfile>> CreateUser([FromBody] UserProfile userProfile)
         {
-            _context.UserProfiles.Add(user);
+            // Ensure User exists in AspNetUsers
+            var existingUser = await _context.Users.FindAsync(userProfile.UserId);
+            if (existingUser == null)
+                return BadRequest("User not found in Identity table.");
+
+            // Don’t set the Id manually — EF will handle it
+            userProfile.User = existingUser;
+
+            _context.UserProfiles.Add(userProfile);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+
+            return CreatedAtAction(nameof(GetUser), new { id = userProfile.Id }, userProfile);
         }
+
+      
 
         // DELETE: api/UserProfile/5
         [HttpDelete("{id}")]

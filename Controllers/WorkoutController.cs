@@ -23,7 +23,9 @@ namespace FitnessTracker.Controllers
         [HttpGet]
         public async Task<IActionResult> GetWorkouts()
         {
-          
+
+           
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // This retrieves the UserId from the logged-in user
             var userProfile = await _context.UserProfiles
                 .FirstOrDefaultAsync(u => u.UserId == userId);
@@ -45,20 +47,20 @@ namespace FitnessTracker.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateWorkout([FromBody] Workout workout)
         {
-            var userName = User.Identity?.Name;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var userProfile = await _context.UserProfiles
-                .FirstOrDefaultAsync(u => u.UserName == userName);
+                .FirstOrDefaultAsync(u => u.UserId == userId);
 
             if (userProfile == null)
                 return BadRequest("UserProfile not found");
 
             workout.UserProfileId = userProfile.Id;
-
             _context.Workout.Add(workout);
             await _context.SaveChangesAsync();
 
             return Ok(workout);
         }
+
 
         // PUT: api/workouts/5
         [HttpPut("{id}")]
