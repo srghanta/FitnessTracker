@@ -1,70 +1,77 @@
-﻿using FitnessTracker.Data;
+﻿using AutoMapper;
+using FitnessTracker.Data;
+using FitnessTracker.DTOs;
 using FitnessTracker.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
-
+using System.Security.Claims;
 
 namespace FitnessTracker.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Requires authentication for all endpoints in this controller
+    [Authorize]
     public class UserProfileController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public UserProfileController(ApplicationDbContext context)
+        public UserProfileController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
-        // GET: api/UserProfile
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserProfile>>> GetUsers()
+        // ✅ GET: api/UserProfile/me
+        [HttpGet("me")]
+        public async Task<ActionResult<UserProfileDto>> GetMyProfile()
         {
-            return await _context.UserProfiles.ToListAsync();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                return Unauthorized("Invalid user session.");
+
+            var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (profile == null)
+                return NotFound("Profile not found.");
+
+            return Ok(_mapper.Map<UserProfileDto>(profile));
         }
 
-        // GET: api/UserProfile/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserProfile>> GetUser(int id)
+        // ✅ PUT: api/UserProfile/me
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateMyProfile([FromBody] UserProfileDto dto)
         {
-            var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Id == id);
-            if (user == null) return NotFound();
-            return user;
-        }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                return Unauthorized("Invalid user session.");
 
-        // POST: api/UserProfile
-        [HttpPost]
+            var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (profile == null)
+                return NotFound("Profile not found.");
 
-        public async Task<ActionResult<UserProfile>> CreateUser([FromBody] UserProfile userProfile)
-        {
-            // Ensure User exists in AspNetUsers
-            var existingUser = await _context.Users.FindAsync(userProfile.UserId);
-            if (existingUser == null)
-                return BadRequest("User not found in Identity table.");
-
-            // Don’t set the Id manually — EF will handle it
-            userProfile.User = existingUser;
-
-            _context.UserProfiles.Add(userProfile);
+            // Map changes (Age, Height, Weight, etc.)
+            _mapper.Map(dto, profile);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetUser), new { id = userProfile.Id }, userProfile);
+            return Ok(_mapper.Map<UserProfileDto>(profile));
         }
 
-      
-
-        // DELETE: api/UserProfile/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        // ✅ DELETE (optional): api/UserProfile/me
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteMyProfile()
         {
-            var user = await _context.UserProfiles.FindAsync(id);
-            if (user == null) return NotFound();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                return Unauthorized("Invalid user session.");
 
-            _context.UserProfiles.Remove(user);
+            var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (profile == null)
+                return NotFound("Profile not found.");
+
+            _context.UserProfiles.Remove(profile);
             await _context.SaveChangesAsync();
+
             return NoContent();
         }
     }

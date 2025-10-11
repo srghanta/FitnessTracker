@@ -1,4 +1,5 @@
 ﻿using FitnessTracker.Data;
+using FitnessTracker.DTOs;
 using FitnessTracker.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -109,13 +110,18 @@ builder.Services.AddSwaggerGen(c =>
     {
         Type = "object",
         Properties =
-        {
-            { "userName", new OpenApiSchema { Type = "string" } },
-            { "email", new OpenApiSchema { Type = "string" } },
-            { "password", new OpenApiSchema { Type = "string" } },
-            { "fullName", new OpenApiSchema { Type = "string" } }
-        }
+    {
+        { "userName", new OpenApiSchema { Type = "string" } },
+        { "email", new OpenApiSchema { Type = "string" } },
+        { "password", new OpenApiSchema { Type = "string" } },
+        { "fullName", new OpenApiSchema { Type = "string" } },
+        { "age", new OpenApiSchema { Type = "integer", Format = "int32" } },
+        { "height", new OpenApiSchema { Type = "number", Format = "double" } },
+        { "weight", new OpenApiSchema { Type = "number", Format = "double" } }
+    },
+        Required = new HashSet<string> { "userName", "email", "password", "fullName", "age", "height", "weight" }
     });
+
 });
 
 var app = builder.Build();

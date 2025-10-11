@@ -1,22 +1,26 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FitnessTracker.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FitnessTracker.Models
+public class UserProfile
 {
-    public class UserProfile
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        // Foreign key to IdentityUser
-        public string UserId { get; set; } // Link to IdentityUser
+    [Required]
+    [ForeignKey("User")]
+    public string UserId { get; set; }  // FK to IdentityUser
 
-        // Optional: You can add a navigation property to the IdentityUser
-        public User User { get; set; }
+    public User User { get; set; }  // navigation property
 
-        [Required]
-        public string UserName { get; set; } = string.Empty;
+    [Required]
+    public string UserName { get; set; } = string.Empty;
 
-        public int Age { get; set; }
-        public double Weight { get; set; }
-        public double Height { get; set; }
-    }
+    [Required]
+    public int Age { get; set; }
+
+    [Required]
+    public double Weight { get; set; }
+
+    [Required]
+    public double Height { get; set; }
 }
